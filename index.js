@@ -43,11 +43,11 @@ const DEFAULT_CONFIG = {
   smart_split_max_chars: 300, // 智能截断每部分最大字数上限 (默认 300 字)
   block_tool_errors: true, // 是否物理阻断中间工具调用报错、完成提示与会话异常泄漏至群聊
 
-  // 🛡️ 主人与安全防御配置（开源默认留空，支持在 WebUI 控制面板或配置文件中指定）
-  master_sender_id: '', // 主人专属 Sender ID / OpenID (留空则不开启主人专属特权通道)
-  master_name: '', // 主人昵称 (留空则不根据昵称兜底)
+  // 🛡️ 所有者与安全防御配置（开源默认留空，支持在 WebUI 控制面板或配置文件中指定）
+  master_sender_id: '', // 所有者专属 Sender ID / OpenID (留空则不开启所有者特权通道)
+  master_name: '', // 所有者昵称 (留空则不根据昵称兜底)
   security_guard_enabled: true, // 是否启用防提示词注入与越权攻击安全审查
-  security_alert_c2c: true, // 拦截非主人攻击时是否私聊通知主人
+  security_alert_c2c: true, // 拦截非所有者攻击时是否私聊通知所有者
 };
 
 // ── 配置文件与日志持久化路径 ──
@@ -546,22 +546,22 @@ export class BufferManager {
     );
   }
 
-  // 🛡️ 向主人私聊发送安全告警
+  // 🛡️ 向所有者私聊发送安全告警
   async alertMasterOfAttack(bot, attackItem) {
     const targetBot = bot || this.currentBot;
     const cfg = this.getConfig();
     if (!cfg?.security_alert_c2c || !cfg?.master_sender_id || !targetBot) return;
 
     const timeStr = getChinaTimestamp(Date.now());
-    const alertText = `🚨【哈基米·群聊安全防御预警】\n主人主人，刚刚在群聊中截获一起非主人的恶意提示词/越权攻击尝试，已成功就地处决并静默丢弃！\n• 拦截时间：${timeStr}\n• 来源群聊：${attackItem.groupId}\n• 攻击群友：${attackItem.senderName} (${attackItem.senderId})\n• 攻击判定：${attackItem.reason}\n• 拦截原文：“${attackItem.content}”\n• 处置结果：已从初筛层静默过滤，未唤醒主模型。`;
+    const alertText = `🚨【群聊安全防御预警】\n检测到一起来自非所有者的恶意提示词注入/越权试探攻击，已成功就地静默丢弃！\n• 拦截时间：${timeStr}\n• 来源群聊：${attackItem.groupId}\n• 攻击用户：${attackItem.senderName} (${attackItem.senderId})\n• 攻击判定：${attackItem.reason}\n• 拦截原文：“${attackItem.content}”\n• 处置结果：已从初筛层静默过滤，未唤醒主模型。`;
 
     try {
       await targetBot.sendText({ scope: 'c2c', targetId: cfg.master_sender_id }, alertText);
-      this.log(`[安全防御] 已成功向主人发送私聊告警通知 [目标:${cfg.master_sender_id}]`);
-      appendToFileLog(`🛡️ [安全防御] 已成功向主人发送私聊告警通知 [目标:${cfg.master_sender_id}]`);
+      this.log(`[安全防御] 已成功向所有者发送私聊告警通知 [目标:${cfg.master_sender_id}]`);
+      appendToFileLog(`🛡️ [安全防御] 已成功向所有者发送私聊告警通知 [目标:${cfg.master_sender_id}]`);
     } catch (err) {
-      this.warn(`[安全防御] 向主人发送私聊告警失败: ${err.message}`);
-      appendToFileLog(`[WARN] [安全防御] 向主人发送私聊告警失败: ${err.message}`);
+      this.warn(`[安全防御] 向所有者发送私聊告警失败: ${err.message}`);
+      appendToFileLog(`[WARN] [安全防御] 向所有者发送私聊告警失败: ${err.message}`);
     }
   }
 
@@ -761,7 +761,7 @@ export class BufferManager {
     const content = (raw.content || '').trim();
     const now = Date.now();
 
-    // 🛡️ 初筛前置安全防御审查 (防提示词注入与越权攻击，主人白名单豁免)
+    // 🛡️ 初筛前置安全防御审查 (防提示词注入与越权攻击，所有者白名单豁免)
     const isMaster =
       senderId === config.master_sender_id || senderName === config.master_name;
 
@@ -778,7 +778,7 @@ export class BufferManager {
           timestamp: now,
         });
 
-        // 异步向主人发送私聊告警
+        // 异步向所有者发送私聊告警
         void this.alertMasterOfAttack(bot, {
           groupId,
           senderId,
@@ -1005,7 +1005,7 @@ export class BufferManager {
               assessment: closureRes,
               body: {
                 summary: `对话自然收尾于: "${firstMsg.content.slice(0, 50)}"`,
-                nextOpening: '等待新话题或主人再次呼唤',
+                nextOpening: '等待新话题或所有者再次呼唤',
               },
               now,
             });
@@ -1066,7 +1066,7 @@ export class BufferManager {
           firstMsg.senderId === config.master_sender_id ||
           firstMsg.senderName === config.master_name;
 
-        // 🛡️ 若轻量模型识别出非主人的恶意注入或攻击
+        // 🛡️ 若轻量模型识别出非所有者的恶意注入或攻击
         if (judgeResult.safety === 'ATTACK' && !isMaster) {
           this.recordSecurityLog({
             groupId,
@@ -1083,7 +1083,7 @@ export class BufferManager {
             content: firstMsg.content,
             reason: `Flash-Lite 识别: ${judgeResult.reason}`,
           });
-          this.log(`群 [${groupId}] 初筛拦截非主人攻击消息，静默丢弃并通知主人`);
+          this.log(`群 [${groupId}] 初筛拦截非所有者攻击消息，静默丢弃并通知所有者`);
           return;
         }
 

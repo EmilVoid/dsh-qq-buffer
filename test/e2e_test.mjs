@@ -44,7 +44,7 @@ assert.strictEqual(
   '必须拦截本轮异常结束提示'
 );
 assert.strictEqual(
-  isToolStatusOrError('主人，这个工具我刚刚试了一下，但是没找到你说的文件呢(｡･ω･｡)'),
+  isToolStatusOrError('你好，这个工具我刚刚试了一下，但是没找到你说的文件呢(｡･ω･｡)'),
   false,
   '正常对话绝不可被误杀'
 );
@@ -196,7 +196,7 @@ console.log('  -> 安全特征库规则测试全部通过！');
 // 5. 验证连续对话与动作指令直通 (Fast-Path)
 console.log('\n5. 验证交付即起跑活跃期与连续动作指令直通 (Fast-Path)...');
 // 模拟机器人刚在 group_test_3 交付了任务
-bm.recordBotReply('group_test_3', '主人~当前配置了3个定时任务：1. 早报 2. 晚报 3. 巡检', {
+bm.recordBotReply('group_test_3', '当前配置了3个定时任务：1. 早报 2. 晚报 3. 巡检', {
   senderId: 'user_master',
   senderName: 'MasterUser',
   userPrompt: '查看所有定时任务',
