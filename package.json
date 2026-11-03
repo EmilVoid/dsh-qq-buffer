@@ -1,0 +1,72 @@
+{
+  "name": "dsh-qq-buffer",
+  "version": "1.0.0",
+  "description": "DeepSeek Harness 群聊智能聚合缓冲、物理拦截与安全防护插件",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "dsh": ">=0.1.7-rc.1",
+    "node": ">=22"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "qqbot",
+    "qq-robot",
+    "buffer",
+    "smart-debounce",
+    "anti-prompt-injection",
+    "security-guard"
+  ],
+  "author": "EmilVoid",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmilVoid/dsh-qq-buffer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/EmilVoid/dsh-qq-buffer/issues"
+  },
+  "homepage": "https://github.com/EmilVoid/dsh-qq-buffer#readme",
+  "peerDependencies": {
+    "@deepseek-ai/dsh-llm": "*",
+    "@tencent-connect/dsh-qqbot": "*",
+    "@tencent-connect/qqbot-nodejs": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@tencent-connect/dsh-qqbot": {
+      "optional": true
+    },
+    "@tencent-connect/qqbot-nodejs": {
+      "optional": true
+    }
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  }
+}

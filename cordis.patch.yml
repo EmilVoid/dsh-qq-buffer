@@ -1,0 +1,5 @@
+- insert:
+    - id: qq-buffer
+      name: dsh-qq-buffer
+      config:
+        enabled: true
